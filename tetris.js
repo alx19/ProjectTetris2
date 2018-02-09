@@ -1,3 +1,6 @@
+//главый файл. здесь мы создаем экземпляры объекта Game
+
+//выбираем опции для тетрисов
 var game1opt = {
     colourOnly: false,
     altControl: false,
@@ -10,6 +13,7 @@ var game2opt = {
 }
 var game1 = new Game('myCanvas','leaderBoard', game1opt,'scoreTetris1');
 var game2 = new Game('secondTetris','leaderBoard2', game2opt,'scoreTetris2')
+//обновления анимаций и диспетчера событий
 requestAnimationFrame(game1.update);
 document.addEventListener('keydown',game1.keyListen,false);
 document.addEventListener('click',game1.player.colourChanger, false);
