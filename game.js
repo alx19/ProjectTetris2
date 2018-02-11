@@ -204,7 +204,6 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
         }
         self.topRecords();
         self.draw();
-        self.updateScore(currentScore);
         requestAnimationFrame(self.update);
     };
 }
