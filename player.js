@@ -1,9 +1,15 @@
+//создаем конструктор объекта Player
 var Player = function(threeColours,options,colours) {
     var self = this;
     this.pos = {x:0, y:0};
     this.score = 0;
-    this.createPiece = function()
-    {
+    //создаем новую фигуру
+    //фигура создается рандомно
+    //за фигурой закреплен 1 из 8 цветов
+    //если options.colourOnly == true, то цвет
+    //выбирается рандом из списка 3х цветов(которые
+    //создаются в Game и передаются в конструктор)
+    this.createPiece = function() {
         var pieces = ['line','foursquare','T','underT','L','Z','S','J'];
         var name = pieces[Math.floor(Math.random()*pieces.length)];
         var piece = {};
@@ -67,6 +73,8 @@ var Player = function(threeColours,options,colours) {
     this.piece = this.createPiece();
     this.matx = this.piece.matrix;
     this.colour = this.piece.colour;
+    //функция смена цвета по клику
+    //невозможно использование, когда очков меньше 5
     this.colourChanger = function() {
         if (this.score >= 5) {
             var oldColour = this.colour;
