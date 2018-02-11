@@ -1,10 +1,17 @@
+//создаем функцию-конструктор объекта Game
+//передаваемые параметры - сanvasId нашего тетриса, id для доски рекордов
+//опции тетриса и id, где будет храниться текущий счет игрока
 var Game = function(canvasId,scoreboardId,options,currentScore) {
+    //сохраняем созданный объект this в self
     var self = this;
+    //вызываем конструктор объекта Арена
+    //передаем ему параметры ширины и высоты, а также опции
     self.arena = new Arena(10,20,options);
     self.canvas = document.getElementById(canvasId);
     self.ctx = self.canvas.getContext('2d');
     self.ctx.scale(40,40);
     self.colours = ['#3877FF','#FFE138','#FF8E0D',"#FF0D72",'#0DC2FF','#0DFF72','#F538FF','#FF0000'];
+    //функция для создания 3 цветов(для режима цветного тетриса)
     self.coloursGenerator = function() {
         var threeColours = [];
         var currentColour;
@@ -17,8 +24,11 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
         return threeColours;
     };
     self.threeColours = self.coloursGenerator();
+    //создаем нового игрока. передаем 3 цвета, опции тетриса, и все цвета
     self.player = new Player(self.threeColours,options,self.colours);
     self.sessionRecords = [];
+    //сравниваем все рекорд и выводим их в порядке убывания
+    //если рекродов нет, то выводим - 'Пока нет рекордов'
     self.topRecords = function() {
         function compareNumeric(a, b) {
             if (Number(a) < Number(b)) return 1;
@@ -36,8 +46,7 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
         }
         document.getElementById(scoreboardId).innerText = text;
     };
-    
-
+    //прорисовка фигуры. передаем саму фигуру и ее координаты
     self.drawFigure = function(piece,offset) {
         piece.forEach((row, y) => {
             row.forEach((value, x) => {
@@ -48,6 +57,8 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
             });
         });
     };
+    //общая функция прорисовки
+    //очищает поле, рисует накопленные блоки и фигуру игрока
     self.draw = function () {
         //очищаем поле
         self.ctx.fillStyle = '#000';
@@ -65,6 +76,9 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
         self.drawFigure(self.player.matx, self.player.pos);
 
     };
+    //функция сброса - создает новую фигуру, сбрасывает координаты
+    //если на поле нельзя поместить фигуру,то сбрасываем счет, очищаем
+    //поле, создаем новую фигуру
     self.reset = function() {
         function newPiece() {
             var choosenPiece = self.player.createPiece();
@@ -75,7 +89,7 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
         self.player.pos.y = 0;
         self.player.pos.x = 0;
         //если мы не можем поместить новую фигуру на поле
-        if (self.isMoveLegal(self.arena, self.player)) {
+        if (self.isMoveNotLegal(self.arena, self.player)) {
             self.arena.matx.forEach(row => row.fill(0));
             if (self.player.score != 0) {
                 self.sessionRecords.push(self.player.score);
@@ -84,9 +98,9 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
             self.player.pos.y = 0;
             self.player.pos.x = 0;
             newPiece();
-            //document.location.reload();
         }
     };
+    //объединяем фигуру игрока с наколпенными блоками
     self.merge = function(arena, player) {
         self.player.matx.forEach((row, y) => {
             row.forEach((value, x) => {
@@ -96,7 +110,10 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
             });
         });
     };
-    self.isMoveLegal = function(arena, player) {
+    //проверяем легальность сдвига фигуры
+    //если фигура может двигаться, то вернет false
+    //а если фигура накладывается на блоки, то вернет true
+    self.isMoveNotLegal = function(arena, player) {
         var m = self.player.matx;
         var o = self.player.pos;
         for (var y = 0; y < m.length; ++y) {
@@ -110,15 +127,19 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
         }
         return false;
     };
+    //двигаем фигуру, если ее перемещение легально
     self.move = function(arena, offset) {
         self.player.pos.x += offset;
-        if (self.isMoveLegal(arena, self)) {
+        if (self.isMoveNotLegal(arena, self)) {
             self.player.pos.x -= offset;
         }
     }
+    //функция для обновления текущего счета на странице
     self.updateScore = function(currentScore) {
         document.getElementById(currentScore).innerText = "Текущий счет - " + self.player.score;
     };
+    //функция, которая отвечает за управление тетрисом с клавиатуры
+    //управление зависит от options.altControl(true or false)
     self.keyListen = function(e) {
         if (options.altControl) {
             if(e.keyCode == 68) {
@@ -152,9 +173,13 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
     };
     self.dropCount = 0;
     self.prevTime = 0;
+    //функция дропа фигуры
+    //если после движения фигура накладывается на блок,
+    //то вызываем функцию оюъединения и функцию сброса
+    //если при это сократился ряд, то добавляем 10 очков
     self.drop = function() {
         self.player.pos.y++;
-        if (self.isMoveLegal(self.arena, self.player)) {
+        if (self.isMoveNotLegal(self.arena, self.player)) {
             self.player.pos.y--;
             self.merge(self.arena, self.player);
             self.reset();
@@ -164,6 +189,7 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
         }
         self.dropCount = 0;  
     };
+    //функция обновления
     self.update = function(time = 0) {
         //var interval = 800 - self.player.score;
         var interval = 800;
@@ -178,7 +204,7 @@ var Game = function(canvasId,scoreboardId,options,currentScore) {
         }
         self.topRecords();
         self.draw();
-        //self.updateScore(currentScore);
+        self.updateScore(currentScore);
         requestAnimationFrame(self.update);
     };
 }
